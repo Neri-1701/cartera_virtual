@@ -14,6 +14,7 @@ import { useProjection } from './hooks/useProjection';
 import FlowChart from './components/FlowChart';
 import MsiChart from './components/MsiChart';
 import { addMonths } from './utils/finance';
+import CardsManager from './components/CardsManager';
 
 const DEFAULT_CATEGORIES = ['Ingresos', 'Hogar', 'Transporte', 'Entretenimiento', 'Familia', 'Salud', 'Otros'];
 
@@ -52,6 +53,7 @@ function App() {
   const { movements, addMovement, updateMovement, deleteMovement, replaceAll, stats } = useTransactions();
   const { filters, updateFilters, clearFilters, filterMovements } = useFilters();
   const [editing, setEditing] = useState<Movement | null>(null);
+  const [showCards, setShowCards] = useState(false);
 
   const categories = useMemo(() => {
     const dynamic = new Set([...DEFAULT_CATEGORIES, ...movements.map((item) => item.category)]);
@@ -149,6 +151,9 @@ function App() {
             <p className={`text-lg font-semibold ${stats.balance >= 0 ? 'text-green-700' : 'text-red-700'}`}>
               {formatCurrency(stats.balance)}
             </p>
+            <div className="mt-2">
+              <button onClick={() => setShowCards(true)} className="text-sm text-blue-600">Gestionar tarjetas</button>
+            </div>
           </div>
         </div>
       </header>
@@ -248,7 +253,8 @@ function App() {
               onCancelEdit={() => setEditing(null)}
             />
 
-            <div className="mt-4 bg-white border border-gray-100 rounded-lg shadow-sm p-4 text-sm text-gray-600 space-y-2">
+            <div className="mt-4 space-y-4">
+            <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4 text-sm text-gray-600 space-y-2">
               <p className="font-semibold text-gray-800">Tips de uso</p>
               <ul className="list-disc pl-5 space-y-1">
                 <li>El saldo y el resumen mensual respetan los filtros aplicados.</li>
@@ -256,6 +262,13 @@ function App() {
                 <li>Los datos viven en tu navegador. Puedes limpiar storage manualmente desde las herramientas del navegador.</li>
               </ul>
             </div>
+
+            {showCards && (
+              <div className="bg-white border border-gray-100 rounded-lg shadow-sm p-4">
+                <CardsManager onClose={() => setShowCards(false)} />
+              </div>
+            )}
+          </div>
           </div>
         </div>
       </main>

@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
-import { generateProjection, type ProjectionRow, DEFAULT_CARDS, type Card } from '../utils/finance';
+import { generateProjection, type ProjectionRow, type Card } from '../utils/finance';
 import { useTransactions } from './useTransactions';
+import { useCards } from './useCards';
 
-export const useProjection = (cards: Card[] = DEFAULT_CARDS) => {
+export const useProjection = () => {
   const { movements } = useTransactions();
+  const { cards } = useCards();
 
   const projection = useMemo(() => generateProjection(movements, cards), [movements, cards]);
 

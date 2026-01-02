@@ -30,4 +30,16 @@ describe('storageService', () => {
     expect(restored).toHaveLength(1);
     expect(restored[0].concept).toBe('Prueba');
   });
+
+  it('returns default cards when none exist and persists cards', () => {
+    const cards = storageService.loadCards();
+    expect(cards.length).toBeGreaterThan(0);
+
+    const newCard = { id: 'x', name: 'TestCard', cutDay: 5, paymentGapDays: 10, cycleDays: 30 };
+    storageService.saveCards([newCard]);
+
+    const loaded = storageService.loadCards();
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0].name).toBe('TestCard');
+  });
 });

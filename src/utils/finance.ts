@@ -1,13 +1,14 @@
 export interface Card {
   id: string | number;
   name: string;
-  cutDay: number;
-  payDay: number;
+  cutDay: number; // day of month when the cut happens (1-31)
+  paymentGapDays?: number; // days after cut for payment due (default: 10)
+  cycleDays?: number; // cycle length in days (default: 30)
 }
 
 export const DEFAULT_CARDS: Card[] = [
-  { id: '1', name: 'Nu', cutDay: 10, payDay: 20 },
-  { id: '2', name: 'BBVA Oro', cutDay: 22, payDay: 12 }
+  { id: '1', name: 'Nu', cutDay: 10, paymentGapDays: 10, cycleDays: 30 },
+  { id: '2', name: 'HSBC Air', cutDay: 22, paymentGapDays: 10, cycleDays: 30 }
 ];
 
 import { parseISODateToLocal } from './format';
@@ -25,16 +26,23 @@ export function calculatePaymentDate(purchaseDateStr: string, cardId?: string | 
   const card = cards.find((c) => String(c.id) === String(cardId));
   if (!card) return purchaseDate;
 
-  const cutDateThisMonth = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth(), card.cutDay);
+  const cutDay = card.cutDay;
+  const gap = card.paymentGapDays ?? 10;
 
-  let basePaymentMonth: Date;
+  // Determine the cut date for the purchase month
+  const cutDateThisMonth = new Date(purchaseDate.getFullYear(), purchaseDate.getMonth(), cutDay);
+
+  // If purchase happens on or before the cut date, payment is for this cycle's cut, otherwise next cycle
+  let relevantCutDate: Date;
   if (purchaseDate <= cutDateThisMonth) {
-    basePaymentMonth = addMonths(cutDateThisMonth, 1);
+    relevantCutDate = cutDateThisMonth;
   } else {
-    basePaymentMonth = addMonths(cutDateThisMonth, 2);
+    relevantCutDate = addMonths(cutDateThisMonth, 1);
   }
 
-  return new Date(basePaymentMonth.getFullYear(), basePaymentMonth.getMonth(), card.payDay);
+  // Payment date is cut date + gap days
+  const paymentDate = new Date(relevantCutDate.getFullYear(), relevantCutDate.getMonth(), relevantCutDate.getDate() + gap);
+  return paymentDate;
 }
 
 import type { Movement } from '../types/movement';

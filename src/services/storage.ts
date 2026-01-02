@@ -1,4 +1,6 @@
 import type { Movement } from '../types/movement';
+import type { Card } from '../types/card';
+import { DEFAULT_CARDS } from '../utils/finance';
 
 const STORAGE_KEY = 'cartera_virtual_state';
 const CURRENT_VERSION = 1;
@@ -6,6 +8,7 @@ const CURRENT_VERSION = 1;
 interface StoredState {
   version: number;
   movements: Movement[];
+  cards?: Card[];
 }
 
 const buildDefaultMovements = (): Movement[] => {
@@ -65,7 +68,8 @@ const buildDefaultMovements = (): Movement[] => {
 
 const getEmptyState = (): StoredState => ({
   version: CURRENT_VERSION,
-  movements: buildDefaultMovements()
+  movements: buildDefaultMovements(),
+  cards: DEFAULT_CARDS
 });
 
 const migrate = (state: StoredState | null): StoredState => {
@@ -83,7 +87,8 @@ const migrate = (state: StoredState | null): StoredState => {
         cardId: (m as any).cardId ?? undefined,
         isMSI: (m as any).isMSI ?? false,
         months: (m as any).months ?? 0
-      }))
+      })),
+      cards: state.cards ?? DEFAULT_CARDS
     };
     return normalized;
   }
@@ -114,9 +119,12 @@ export const storageService = {
   save(movements: Movement[]): void {
     if (typeof localStorage === 'undefined') return;
 
+    const current = readStorage() ?? getEmptyState();
+
     const payload: StoredState = {
       version: CURRENT_VERSION,
-      movements
+      movements,
+      cards: current.cards
     };
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -124,5 +132,21 @@ export const storageService = {
   clear(): void {
     if (typeof localStorage === 'undefined') return;
     localStorage.removeItem(STORAGE_KEY);
+  },
+  loadCards(): Card[] {
+    const migrated = migrate(readStorage());
+    return migrated.cards ?? DEFAULT_CARDS;
+  },
+  saveCards(cards: Card[]): void {
+    if (typeof localStorage === 'undefined') return;
+
+    const current = readStorage() ?? getEmptyState();
+    const payload: StoredState = {
+      version: CURRENT_VERSION,
+      movements: current.movements,
+      cards
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   }
 };
