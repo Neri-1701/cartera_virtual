@@ -10,13 +10,20 @@ interface Props {
   onCancelEdit?: () => void;
 }
 
+import { DEFAULT_CARDS } from '../utils/finance';
+
 const emptyForm: MovementInput = {
   concept: '',
   category: '',
   amount: 0,
   type: 'EXPENSE',
   date: new Date().toISOString().slice(0, 10),
-  notes: ''
+  notes: '',
+  // new fields for cards / MSI
+  paymentMethod: 'DEBIT',
+  cardId: undefined,
+  isMSI: false,
+  months: 3
 };
 
 export const TransactionForm = ({ categories, editing, onSubmit, onCancelEdit }: Props) => {
@@ -31,17 +38,21 @@ export const TransactionForm = ({ categories, editing, onSubmit, onCancelEdit }:
         amount: editing.amount,
         type: editing.type,
         date: editing.date,
-        notes: editing.notes ?? ''
+        notes: editing.notes ?? '',
+        paymentMethod: (editing as any).paymentMethod ?? 'DEBIT',
+        cardId: (editing as any).cardId ?? undefined,
+        isMSI: (editing as any).isMSI ?? false,
+        months: (editing as any).months ?? 3
       });
     } else {
       setForm({ ...emptyForm, category: categories[0] ?? '' });
     }
   }, [editing, categories]);
 
-  const handleChange = (key: keyof MovementInput, value: string) => {
+  const handleChange = (key: keyof MovementInput, value: string | number | boolean) => {
     setForm((prev) => ({
       ...prev,
-      [key]: key === 'amount' ? Number(value) : value
+      [key]: key === 'amount' || key === 'months' ? Number(value) : value
     }));
   };
 
@@ -164,6 +175,63 @@ export const TransactionForm = ({ categories, editing, onSubmit, onCancelEdit }:
               required
             />
           </label>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label className="flex flex-col text-sm text-gray-700">
+            Método
+            <select
+              className="mt-1 rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+              value={form.paymentMethod}
+              onChange={(event) => handleChange('paymentMethod', event.target.value)}
+            >
+              <option value="DEBIT">Débito / Efectivo</option>
+              <option value="CREDIT">Tarjeta de Crédito</option>
+            </select>
+          </label>
+
+          <div className="flex flex-col text-sm text-gray-700">
+            <label className="mb-1">Tarjeta (opcional)</label>
+            <select
+              className={`mt-1 rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary ${
+                form.paymentMethod !== 'CREDIT' ? 'opacity-60 pointer-events-none' : ''
+              }`}
+              value={form.cardId ?? ''}
+              onChange={(event) => handleChange('cardId', event.target.value)}
+            >
+              <option value="">-- Selecciona --</option>
+              {DEFAULT_CARDS.map((c) => (
+                <option key={c.id} value={String(c.id)}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
+            <div className={`mt-3 p-2 rounded border ${form.paymentMethod === 'CREDIT' ? 'bg-orange-50 border-orange-100' : 'hidden'}`}>
+              <label className="inline-flex items-center">
+                <input
+                  type="checkbox"
+                  checked={Boolean(form.isMSI)}
+                  onChange={(e) => handleChange('isMSI', e.target.checked)}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm">¿Es a Meses Sin Intereses (MSI)?</span>
+              </label>
+
+              {form.isMSI ? (
+                <div className="mt-2">
+                  <label className="text-sm">Plazo (meses)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    className="mt-1 w-24 rounded border border-gray-300 px-3 py-2"
+                    value={form.months as number}
+                    onChange={(e) => handleChange('months', Number(e.target.value))}
+                  />
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
 
         <label className="flex flex-col text-sm text-gray-700">
