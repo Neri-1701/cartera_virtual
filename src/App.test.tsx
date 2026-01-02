@@ -8,7 +8,9 @@ const fillForm = async () => {
   const concept = screen.getByLabelText(/concepto/i);
   const amount = screen.getByLabelText(/monto/i);
   const date = screen.getByLabelText(/fecha/i);
-  const category = screen.getByLabelText(/categoría/i);
+  // Scope the form by its header to avoid duplicate labels elsewhere on the page
+  const section = screen.getByRole('heading', { name: /registrar movimiento/i }).closest('section') as Element;
+  const category = within(section).getByLabelText(/categoría/i);
 
   await user.clear(concept);
   await user.type(concept, 'Test ingreso');
@@ -29,7 +31,9 @@ describe('App', () => {
 
     await fillForm();
 
-    const table = screen.getByRole('table');
+    const headerDiv = screen.getByRole('heading', { name: /historial/i }).closest('div') as Element;
+    const container = headerDiv.parentElement?.parentElement as Element; // move up to component root
+    const table = within(container).getByRole('table');
     const row = within(table).getByText(/Test ingreso/);
     expect(row).toBeInTheDocument();
   });

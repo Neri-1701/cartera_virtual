@@ -74,7 +74,18 @@ const migrate = (state: StoredState | null): StoredState => {
   }
 
   if (state.version === CURRENT_VERSION) {
-    return state;
+    // Normalize movements so older saved state gains new optional fields gracefully
+    const normalized: StoredState = {
+      ...state,
+      movements: state.movements.map((m) => ({
+        ...m,
+        paymentMethod: (m as any).paymentMethod ?? (m.type === 'EXPENSE' ? 'DEBIT' : undefined),
+        cardId: (m as any).cardId ?? undefined,
+        isMSI: (m as any).isMSI ?? false,
+        months: (m as any).months ?? 0
+      }))
+    };
+    return normalized;
   }
 
   // Placeholder for future migrations. For now, reset to defaults when version mismatch occurs.

@@ -47,7 +47,10 @@ export const useTransactions = () => {
 
   const stats = useMemo(() => {
     const income = movements.filter((item) => item.type === 'INCOME').reduce((acc, curr) => acc + curr.amount, 0);
-    const expense = movements.filter((item) => item.type === 'EXPENSE').reduce((acc, curr) => acc + curr.amount, 0);
+    // Only consider immediate/debit expenses for the current balance
+    const expense = movements
+      .filter((item) => item.type === 'EXPENSE' && ((item as any).paymentMethod ?? 'DEBIT') === 'DEBIT')
+      .reduce((acc, curr) => acc + curr.amount, 0);
 
     return {
       income,

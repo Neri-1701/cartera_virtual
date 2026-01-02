@@ -8,6 +8,11 @@ export interface Movement {
   amount: number;
   type: MovementType;
   notes?: string;
+  // Optional fields for card / MSI support
+  paymentMethod?: 'DEBIT' | 'CREDIT';
+  cardId?: string;
+  isMSI?: boolean;
+  months?: number;
   createdAt: number;
   updatedAt: number;
 }
