@@ -18,7 +18,7 @@ import { addMonths } from './utils/finance';
 const DEFAULT_CATEGORIES = ['Ingresos', 'Hogar', 'Transporte', 'Entretenimiento', 'Familia', 'Salud', 'Otros'];
 
 const getMonthLabel = (date: string): string =>
-  new Date(date).toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
+  parseISODateToLocal(date).toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
 
 const buildMonthlySummary = (movements: Movement[]) => {
   const grouped = movements.reduce<Record<string, { income: number; expense: number }>>((acc, movement) => {
